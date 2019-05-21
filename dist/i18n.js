@@ -2,21 +2,23 @@
 
 module.exports = {
   en_US: {
-    createdAt: 'Created at',
-    amount: 'Total',
+    quantity: 'Quantity',
+    productNo: 'Product No.',
+    productName: 'Product Name',
+    createdAt: 'Delivered on',
+    amount: 'Total net',
     chargeStatus: 'Payment status',
     chargeFor: 'Invoice for: ',
-    description: 'Description',
-    name: 'Name',
-    quantity: 'Quantity',
+    description: 'Description'
   },
   de_DE: {
+    quantity: 'Menge',
+    productNo: 'Product No.',
+    productName: 'Product Name',
     createdAt: 'Hergestellt in',
-    amount: 'Gesamt',
+    amount: 'Gesamt net',
     chargeStatus: 'Zahlungsstatus',
     chargeFor: 'Rechnung für: ',
-    description: 'Beschreibung',
-    name: 'Name',
-    quantity: 'Menge',
-  },
+    description: 'Beschreibung'
+  }
 };
