@@ -14,7 +14,8 @@ function PDFInvoice(_ref) {
       items = _ref.items,
       invoiceDate = _ref.invoiceDate,
       invoiceNo = _ref.invoiceNo,
-      orderId = _ref.orderId;
+      orderId = _ref.orderId,
+      invoiceCurrency = _ref.invoiceCurrency;
 
   var date = new Date(invoiceDate);
   var charge = {
@@ -46,7 +47,7 @@ function PDFInvoice(_ref) {
       doc.text(company.address || '');
       doc.text(company.city || '');
       doc.text(company.country || '');
-      doc.text('VAT: ' + (company.vat || ""));
+      doc.text('VAT: ' + (company.vatNumber || ""));
     },
     genCustomerInfos: function genCustomerInfos() {
       doc.font('Helvetica-Bold').text('TO:', CONTENT_LEFT_PADDING * 5, 180);
@@ -54,7 +55,7 @@ function PDFInvoice(_ref) {
       doc.text(customer.address || '');
       doc.text(customer.city || '');
       doc.text(customer.country || '');
-      doc.text('VAT: ' + (customer.vat || ""));
+      doc.text('VAT: ' + (customer.vatNumber || ''));
     },
     genDate: function genDate() {
       doc.fillColor('#000').text('Invoice Date: ' + moment(date).format('DD.MM.YYYY'), CONTENT_LEFT_PADDING, 290, {
@@ -107,7 +108,14 @@ function PDFInvoice(_ref) {
       });
     },
     genTotal: function genTotal() {
-      doc.font('Helvetica').text('TOTAL: ' + charge.amount, CONTENT_LEFT_PADDING, doc.y + 20);
+      var message = 'TOTAL ' + invoiceCurrency + ' net without VAT ' + invoiceCurrency + ' ' + charge.amount;
+      if (customer.vat) {
+        var VAT = ~~customer.vat;
+        var vatAmount = charge.amount / 100 * VAT;
+        var total = charge.amount + charge.amount / 100 * VAT;
+        message = 'TOTAL ' + invoiceCurrency + ' net ' + charge.amount + '. VAT ' + customer.vat + ' % ' + invoiceCurrency + ' ' + vatAmount.toFixed(2) + '. Total ' + invoiceCurrency + ' ' + total.toFixed(2) + '.';
+      }
+      doc.font('Helvetica').text('' + message, CONTENT_LEFT_PADDING, doc.y + 20);
     },
     genTableLines: function genTableLines() {
       var offset = doc.currentLineHeight() + 2;
