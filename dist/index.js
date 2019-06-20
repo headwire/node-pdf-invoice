@@ -35,27 +35,27 @@ function PDFInvoice(_ref) {
   var table = {
     x: CONTENT_LEFT_PADDING,
     y: 350,
-    inc: 70
+    inc: 60
   };
 
   return {
     genHeader: function genHeader() {
       doc.image('server/public/img/HS-Security.logo.png');
 
-      doc.fontSize(11).font('Helvetica-Bold').text('FROM:', CONTENT_LEFT_PADDING, 180);
-      doc.font('Helvetica').text(company.name || '');
-      doc.text(company.address || '');
-      doc.text(company.city || '');
-      doc.text(company.country || '');
-      doc.text('VAT: ' + (company.vatNumber || ""));
-    },
-    genCustomerInfos: function genCustomerInfos() {
-      doc.font('Helvetica-Bold').text('TO:', CONTENT_LEFT_PADDING * 5, 180);
+      doc.fontSize(11).font('Helvetica-Bold').text('TO:', CONTENT_LEFT_PADDING, 180);
       doc.font('Helvetica').text(customer.name || '');
       doc.text(customer.address || '');
       doc.text(customer.city || '');
       doc.text(customer.country || '');
       doc.text('VAT: ' + (customer.vatNumber || ''));
+    },
+    genCustomerInfos: function genCustomerInfos() {
+      doc.font('Helvetica-Bold').text('FROM:', CONTENT_LEFT_PADDING * 5, 180);
+      doc.font('Helvetica').text(company.name || '');
+      doc.text(company.address || '');
+      doc.text(company.city || '');
+      doc.text(company.country || '');
+      doc.text('VAT: ' + (company.vatNumber || ""));
     },
     genDate: function genDate() {
       doc.fillColor('#000').text('Invoice Date: ' + moment(date).format('DD.MM.YYYY'), CONTENT_LEFT_PADDING, 290, {
@@ -72,11 +72,11 @@ function PDFInvoice(_ref) {
 
       var note = 'Thank you for your order. Our General Terms and Conditions apply which are published at http://www.hs-securityware.com; Our conditions are considered to have been accepted at the latest when the goods are accepted. Exclusion of property: The good remains until payment of all receivables towards the purchaser of the business relation, including auxiliary receivables, claims for damages and payment of checks and bills of exchange, the property of the seller.';
 
-      doc.font('Helvetica').fontSize(8).text(note, CONTENT_LEFT_PADDING, doc.y + 20).moveDown(2);
+      doc.font('Helvetica').fontSize(10).text(note, CONTENT_LEFT_PADDING, doc.y + 20).moveDown(2);
 
       doc.fontSize(12).text('Delivery: Online EnkyOn.de portal');
       doc.text('Payment: due immediately upon receipt');
-      doc.text('You can pay the bill by credit card or transfer.');
+      doc.text('You can pay the bill by credit card or transfer.').moveDown(2);
       doc.text('Bank: Commerzbank AG');
       doc.text('Bank address: Südstr. 14-16, 31515 Wunstorf');
       doc.text('IBAN: DE88 2504 0066 0272 3658 00');
@@ -85,25 +85,28 @@ function PDFInvoice(_ref) {
       doc.text('Account no.: 272 365 800');
     },
     genTableHeaders: function genTableHeaders() {
-      ['quantity', 'productNo', 'productName', 'createdAt', 'amount'].forEach(function (text, i) {
-        var n = text === 'createdAt' || text === 'amount' ? 160 : 0;
+      ['quantity', 'productNo', 'productName', 'price', 'createdAt', 'amount'].forEach(function (text, i) {
+        var n = text === 'createdAt' || text === 'price' || text === 'amount' ? 130 : 0;
+        var k = text === 'amount' ? 25 : 0;
 
-        doc.fontSize(TEXT_SIZE).font('Helvetica').text(translate[text], table.x + n + i * table.inc, table.y);
+        doc.fontSize(TEXT_SIZE).font('Helvetica').text(translate[text], table.x + n + k + i * table.inc, table.y);
       });
     },
     genTableRow: function genTableRow() {
       items.map(function (item) {
         return Object.assign({}, item, {
-          amount: (item.currency === 'USD' ? '$ ' : '€ ') + numeral(item.amount)
+          amount: (item.currency === 'USD' ? '$ ' : '€ ') + numeral(item.amount),
+          price: (item.currency === 'USD' ? '$ ' : '€ ') + numeral(item.price)
         });
       }).forEach(function (item, itemIndex) {
-        ['quantity', 'productNo', 'productName', 'createdAt', 'amount'].forEach(function (field, i) {
+        ['quantity', 'productNo', 'productName', 'price', 'createdAt', 'amount'].forEach(function (field, i) {
           if (field === 'createdAt') {
-            item[field] = moment(item[field]).format('DD.MM.YYYY');
+            item[field] = moment(item[field]).format('DD.MM.YYYY h:mm');
           }
-          var n = field === 'createdAt' || field === 'amount' ? 160 : 0;
+          var n = field === 'createdAt' || field === 'price' || field === 'amount' ? 130 : 0;
+          var k = field === 'amount' ? 25 : 0;
 
-          doc.fontSize(TEXT_SIZE).text(item[field], table.x + n + i * table.inc, table.y + TEXT_SIZE + 6 + itemIndex * 15);
+          doc.fontSize(TEXT_SIZE).text(item[field], table.x + n + k + i * table.inc, table.y + TEXT_SIZE + 6 + itemIndex * 15);
         });
       });
     },
@@ -111,11 +114,11 @@ function PDFInvoice(_ref) {
       var message = 'TOTAL ' + invoiceCurrency + ' net without VAT ' + invoiceCurrency + ' ' + charge.amount;
       if (customer.vat) {
         var VAT = ~~customer.vat;
-        var vatAmount = charge.amount / 100 * VAT;
-        var total = charge.amount + charge.amount / 100 * VAT;
-        message = 'TOTAL ' + invoiceCurrency + ' net ' + charge.amount + '. VAT ' + customer.vat + ' % ' + invoiceCurrency + ' ' + vatAmount.toFixed(2) + '. Total ' + invoiceCurrency + ' ' + total.toFixed(2) + '.';
+        var vatAmount = (charge.amount / 100 * VAT).toFixed(2);
+        var total = (charge.amount + charge.amount / 100 * VAT).toFixed(2);
+        message = 'TOTAL ' + invoiceCurrency + ' net ' + charge.amount + '       VAT ' + customer.vat + ' % ' + invoiceCurrency + ' ' + vatAmount + '       Total ' + invoiceCurrency + ' ' + total;
       }
-      doc.font('Helvetica').text('' + message, CONTENT_LEFT_PADDING, doc.y + 20);
+      doc.font('Helvetica').fontSize(12).text('' + message, CONTENT_LEFT_PADDING, doc.y + 20);
     },
     genTableLines: function genTableLines() {
       var offset = doc.currentLineHeight() + 2;
